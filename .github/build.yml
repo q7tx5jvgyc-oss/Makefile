@@ -1,0 +1,36 @@
+name: Build iOS Dylib
+
+on:
+  workflow_dispatch: # يتيح لك تشغيل البناء يدوياً بضغطة زر
+  push:
+    branches:
+      - main # يشتغل تلقائياً عند تحديث الكود في الفرع الرئيسي
+
+jobs:
+  build:
+    runs-on: macos-latest # استخدام سيرفر ماك لتخصيص بناء تطبيقات iOS
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Build Dylib
+        run: |
+          # هنا يتم أمر 컴پايل (Compile) وبناء كود السي-بلس أو الأوبجكتف سي وتحويله لـ dylib
+          # تأكد من تعديل اسم الملفات إذا كانت أسماء ملفات الكود لديك مختلفة
+          if [ -f main.m ]; then
+            clang -dynamiclib -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64 main.m -o AutoClicker.dylib
+          elif [ -f main.mm ]; then
+            clang++ -dynamiclib -isysroot $(xcrun --sdk iphoneos --show-sdk-path) -arch arm64 main.mm -o AutoClicker.dylib
+          else
+            echo "لم يتم العثور على ملفات الكود المصدري (main.m أو main.mm)، سيتم البحث عن أي ملف dylib جاهز."
+          fi
+
+      - name: Upload Dylib Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoClicker-Dylib-Package # اسم الملف المضغوط الذي سيظهر لك للتحميل
+          path: ./*.dylib # أمر جلب أي ملف ينتهي بصيغة dylib تم بناؤه
